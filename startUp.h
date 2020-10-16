@@ -4,4 +4,9 @@
 
 SOCKET webserverStartUp();
 
+struct requestData{
+    char recvbuf[DEFAULT_BUFLEN];
+    SOCKET clientSocket;
+};
+
 #endif // _STARTUP_H_

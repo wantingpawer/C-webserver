@@ -6,6 +6,7 @@
 #include <Ws2def.h>
 #include <ws2tcpip.h>
 #include <direct.h>
+#include <processthreadsapi.h>
 
 #include "handleGet.h"
 #include "handleHead.h"

@@ -1,54 +1,61 @@
 #include "common.h"
 
-int handleGet(char *recvbuf, SOCKET ClientSocket){
+void handleGet(struct requestData rqData){
     //Get the requested path from the request
-    strtok(recvbuf, " ");
+    strtok(rqData.recvbuf, " ");
     char* filepath = strtok(NULL, " ");
 
     //Get the data and the file size
     char* data = getFile(filepath);
     size_t size = getFileSize(filepath);
+    if(strcmp(data, "") == 0 || size == 0){
+            printf("Invalid path\n\n");
+            return;
+    }
 
     //Assign a buffer with the size of the file + headers
-    char sendbuf[size + 1000];
+    char sendbuf[size + 100];
     sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
                      "Content-Type: text/html;\r\n"
                      "Content-Length: %I64d\r\n\r\n"
                      "%s\r\n\r\n", strlen(data), data);
 
-    //Send data and save result in variable to check later
-    int sendResult = send(ClientSocket, sendbuf, DEFAULT_BUFLEN, 0);
+    send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
     printf("Sent:\n%s\n", sendbuf);
     free(data);
-    return sendResult;
 }
 
-int handleHead(char *recvbuf, SOCKET ClientSocket){
+void handleHead(struct requestData rqData){
     //Get the requested path from the request
-    strtok(recvbuf, " ");
+    strtok(rqData.recvbuf, " ");
     char* filepath = strtok(NULL, " ");
+    size_t size = getFileSize(filepath);
+    if(size == 0){
+        printf("Invalid path\n\n");
+        return;
+    }
 
     //Create a buffer to hold the header
     char sendbuf[500];
     sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
                      "Content-Type: text/html;\r\n"
                      "Content-Length: %I64d\r\n\r\n",
-                     getFileSize(filepath));
+                     size);
 
-    //Send data and save result in variable to check later
-    int sendResult = send(ClientSocket, sendbuf, DEFAULT_BUFLEN, 0);
+    send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
     printf("Sent:\n%s\n", sendbuf);
-    return sendResult;
 }
 
 char* getFile(char *path){
     //Get rid of the first part of the path
     for(int i = 1; i < strlen(path)+1; ++i) path[i-1] = path[i];
+
     //If the path is empty set it to index.html
     /*
     TODO: MAKE THE DEFAULT PATH CONFIGURABLE
     */
     if(strcmp(path, "") == 0) path = "index.html";
+    if( access( path, F_OK ) == -1 ) return 0;
     FILE* fptr = fopen(path, "r");
 
     //Get file size
@@ -70,7 +77,7 @@ size_t getFileSize(char *path){
     TODO: MAKE THE DEFAULT PATH CONFIGURABLE
     */
     if(strcmp(path, "") == 0) path = "index.html";
-
+    if( access( path, F_OK ) == -1 ) return 0;
     //Get and return the file size
     FILE* fptr = fopen(path, "r");
     fseek(fptr, 0L, SEEK_END);

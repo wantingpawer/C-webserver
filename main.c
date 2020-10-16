@@ -6,11 +6,11 @@ int main(int argc, char *argv[]){
 
     //Starts up web server and assigns result to listen socket, as well as declares client socket
     SOCKET listenSocket = webserverStartUp();
-    SOCKET ClientSocket;
+    struct requestData rqData;
 
     while(1){
         //If accepting the connection fails
-        if((ClientSocket = accept(listenSocket, NULL, NULL)) == INVALID_SOCKET){
+        if((rqData.clientSocket = accept(listenSocket, NULL, NULL)) == INVALID_SOCKET){
             //Print an error
             printf("Accept failed: %d\n", WSAGetLastError());
             closesocket(listenSocket);
@@ -19,33 +19,21 @@ int main(int argc, char *argv[]){
         }else{
             //Otherwise print that the connection was accepted
             printf("Accepted connection\n");
-            int recvResult, sendResult;
-            char recvbuf[DEFAULT_BUFLEN];
+            int recvResult;
 
             //Receive data in recvResult and print how much was received
-            recvResult = recv(ClientSocket, recvbuf, DEFAULT_BUFLEN, 0);
+            recvResult = recv(rqData.clientSocket, rqData.recvbuf, DEFAULT_BUFLEN, 0);
             if(recvResult > 0){
                 printf("Received %d bytes\n", recvResult);
             }
 
             //Print what was received and handle specific requests
-            printf("%s\n", recvbuf);
-            if(strncmp(recvbuf, "GET", 3) == 0){
-                sendResult = handleGet(recvbuf, ClientSocket);
-            }else if(strncmp(recvbuf, "HEAD", 4) == 0){
-                sendResult = handleHead(recvbuf, ClientSocket);
+            printf("%s\n", rqData.recvbuf);
+            if(strncmp(rqData.recvbuf, "GET", 3) == 0){
+                handleGet(rqData);
+            }else if(strncmp(rqData.recvbuf, "HEAD", 4) == 0){
+                handleHead(rqData);
             }
-
-            //If there is an error, print it and quit
-            if(sendResult == SOCKET_ERROR){
-                printf("Send failed: %d\n", WSAGetLastError());
-                closesocket(ClientSocket);
-                WSACleanup();
-                return -1;
-            }
-
-            //Print bytes sent
-            printf("Sent %d bytes\n", sendResult);
         }
     }
     return 0;

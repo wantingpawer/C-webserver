@@ -2,7 +2,7 @@
 #define _HANDLEHEAD_H_
 #include "common.h"
 
-int handleHead(char *recvbuf, SOCKET ClientSocket);
+void handleHead(struct requestData rqData);
 size_t getFileSize(char *path);
 
 #endif // _HANDLEHEAD_H_
