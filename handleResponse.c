@@ -7,11 +7,11 @@ void handleGet(struct requestData rqData){
 
     //Get the data and the file size
     char* data = getFile(filepath);
-    size_t size = getFileSize(filepath);
-    if(strcmp(data, "") == 0 || size == 0){
-            printf("Invalid path\n\n");
-            return;
+    if (!data){
+        printf("Invalid path\n\n");
+        return;
     }
+    size_t size = getFileSize(filepath);
 
     //Assign a buffer with the size of the file + headers
     char sendbuf[size + 100];
@@ -23,6 +23,7 @@ void handleGet(struct requestData rqData){
     send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
     printf("Sent:\n%s\n", sendbuf);
     free(data);
+    pthread_exit(NULL);
 }
 
 void handleHead(struct requestData rqData){
@@ -47,9 +48,8 @@ void handleHead(struct requestData rqData){
 }
 
 char* getFile(char *path){
-    //Get rid of the first part of the path
-    for(int i = 1; i < strlen(path)+1; ++i) path[i-1] = path[i];
-
+    //Get rid of the first part of the path if it's a "/"
+    if(strncmp(path, "/", 1) == 0) for(int i = 1; i < strlen(path)+1; ++i) path[i-1] = path[i];
     //If the path is empty set it to index.html
     /*
     TODO: MAKE THE DEFAULT PATH CONFIGURABLE
@@ -65,13 +65,20 @@ char* getFile(char *path){
 
     //Allocate enough memory to hold the file
     char* result = malloc(size);
-    fscanf(fptr, "%s", result);
+    char temp[size];
+    fgets(result, size, fptr);
+
+    //Make sure ever line is read (can probably make this a little more efficient, works for now though)
+    while(strlen(result) < size - 1){
+        fgets(temp, size, fptr);
+        strcat(result, temp);
+    }
     return result;
 }
 
 size_t getFileSize(char *path){
-    //Get rid of the first part of the path
-    for(int i = 1; i < strlen(path)+1; ++i) path[i-1] = path[i];
+    //Get rid of the first part of the path if it's a "/"
+    if(strncmp(path, "/", 1) == 0) for(int i = 1; i < strlen(path)+1; ++i) path[i-1] = path[i];
     //If the path is empty replace it with "index.html"
     /*
     TODO: MAKE THE DEFAULT PATH CONFIGURABLE
