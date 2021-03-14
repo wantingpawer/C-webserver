@@ -1,0 +1,30 @@
+# depslib dependency file v1.0
+1615559569 source:c:\users\omera\documents\github\c-webserver\handleresponse.c
+	"common.h"
+
+1615460407 c:\users\omera\documents\github\c-webserver\common.h
+	<stdio.h>
+	<winsock2.h>
+	<Ws2def.h>
+	<ws2tcpip.h>
+	<direct.h>
+	<pthread.h>
+	"handleGet.h"
+	"handleHead.h"
+	"startUp.h"
+
+1615556699 c:\users\omera\documents\github\c-webserver\handleget.h
+	"common.h"
+
+1615459863 c:\users\omera\documents\github\c-webserver\handlehead.h
+	"common.h"
+
+1606475129 c:\users\omera\documents\github\c-webserver\startup.h
+	"common.h"
+
+1606475129 source:c:\users\omera\documents\github\c-webserver\startup.c
+	"common.h"
+
+1615555723 source:c:\users\omera\documents\github\c-webserver\main.c
+	"common.h"
+

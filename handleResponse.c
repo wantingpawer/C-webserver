@@ -9,12 +9,13 @@ void handleGet(struct requestData rqData){
     char* data = getFile(filepath);
     if (!data){
         printf("Invalid path\n\n");
+        return404(rqData);
+        free(data);
+        pthread_exit(NULL);
         return;
     }
-    size_t size = getFileSize(filepath);
-
     //Assign a buffer with the size of the file + headers
-    char sendbuf[size + 100];
+    char sendbuf[strlen(data) + 100];
     sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
                      "Content-Type: text/html;\r\n"
                      "Content-Length: %I64d\r\n\r\n"
@@ -45,6 +46,27 @@ void handleHead(struct requestData rqData){
 
     send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
     printf("Sent:\n%s\n", sendbuf);
+    pthread_exit(NULL);
+}
+
+void return404(struct requestData rqData){
+    char* data = getFile("404.html");
+    char sendbuf[getFileSize("404.html") + 100];
+    if (!data){
+        printf("WARNING: Please make a \"404.html\" file for users to receive upon getting a 404 error\n\n");
+        sprintf(sendbuf, "HTTP/1.1 404 NOT FOUND\r\n"
+                "Content-Length: 0\r\n\r\n"
+                "\r\n\r\n");
+    }else{
+        sprintf(sendbuf, "HTTP/1.1 404 NOT FOUND\r\n"
+                     "Content-Type: text/html;\r\n"
+                     "Content-Length: %I64d\r\n\r\n"
+                     "%s\r\n\r\n", getFileSize("404.html"), data);
+    }
+
+    send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
+    printf("Sent:\n%s\n", sendbuf);
+    free(data);
 }
 
 char* getFile(char *path){
