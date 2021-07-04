@@ -1,12 +1,13 @@
 #include "common.h"
-
 //If the code results a linker error, make sure ws2_32.lib has been included as a library to be linked
+
+int g_max_thread;
 
 int main(int argc, char *argv[]){
 
-    pthread_t threads[MAX_THREADS];
-    //Starts up web server and assigns result to listen socket, as well as declares client socket
     SOCKET listenSocket = webserverStartUp();
+    pthread_t threads[g_max_thread];
+
     struct requestData rqData;
 
     while(1){
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]){
                 int err = pthread_create(&threads[0], NULL, handleGet, &rqData);
                 if(err != 0) printf("Error in thread creation %i", err);
             }else if(strncmp(rqData.recvbuf, "HEAD", 4) == 0){
-                int err = pthread_create(&threads[1], NULL, handleGet, &rqData);
+                int err = pthread_create(&threads[1], NULL, handleHead, &rqData);
                 if(err != 0) printf("Error in thread creation %i", err);
             }
         }

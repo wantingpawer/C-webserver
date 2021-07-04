@@ -1,7 +1,12 @@
 #include "common.h"
 
+int g_max_thread;
+char g_port[DEFAULT_BUFLEN];
+char g_404responsefile[DEFAULT_BUFLEN];
+char g_root[DEFAULT_BUFLEN];
+
 SOCKET webserverStartUp(){
-        WSADATA wsa;
+    WSADATA wsa;
     SOCKET listenSocket;
 
     //Starts up the winsock in version 2.2 and checks for any errors
@@ -10,6 +15,13 @@ SOCKET webserverStartUp(){
         exit(-1);
     }
     printf("Initialised\n");
+
+    //Load configuration options from the config file (defined in the preprocessor variable CONFIG_FILE)
+    if(loadConfigs() == 0) printf("Configs loaded from %s\n", CONFIG_FILE);
+    else{
+        printf("Error loading configs from %s\n", CONFIG_FILE);
+        exit(-1);
+    }
 
     //Creates the address info structures to be used in getaddrinfo();
     struct addrinfo *result = NULL, hints;
@@ -21,7 +33,7 @@ SOCKET webserverStartUp(){
     hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags = AI_PASSIVE;
 
-    if(getaddrinfo(NULL, DEFAULT_PORT, &hints, &result) != 0){
+    if(getaddrinfo(NULL, g_port, &hints, &result) != 0){
         printf("getaddrinfo failed: %d\n", WSAGetLastError());
         WSACleanup();
         exit(-1);
@@ -53,5 +65,31 @@ SOCKET webserverStartUp(){
     }
 
     printf("Listening on socket\n");
+
     return listenSocket;
+}
+
+int loadConfigs(){
+    //Open up the config file for reading from
+    FILE* fptr = fopen(CONFIG_FILE, "r");
+
+    //Get the size of the config file
+    fseek(fptr, 0L, SEEK_END);
+    size_t size = ftell(fptr);
+    rewind(fptr);
+
+    char temp[size];
+    //Until the end of the file is reached, load all the config options into their corresponding global variables
+    while(ftell(fptr) < size - 1){
+        fgets(temp, size, fptr);
+        char* setting = strtok(temp, "=");
+        char* value = strtok(strtok(NULL, "="), "\n"); //The 2nd strtok gets rid of the "\n", this was the easiest solution I could think of
+
+        //TODO: find a better solution for this
+        if(strcmp("port", setting) == 0) strcpy(g_port, value);
+        else if(strcmp("max_thread", setting) == 0) g_max_thread = atoi(value);
+        else if(strcmp("404responsefile", setting) == 0) strcpy(g_404responsefile, value);
+        else if(strcmp("root", setting) == 0) strcpy(g_root, value);
+    }
+    return 0;
 }

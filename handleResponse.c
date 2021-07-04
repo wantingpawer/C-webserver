@@ -1,5 +1,8 @@
 #include "common.h"
 
+char g_404responsefile[DEFAULT_BUFLEN];
+char g_root[DEFAULT_BUFLEN];
+
 void handleGet(struct requestData rqData){
     //Get the requested path from the request
     strtok(rqData.recvbuf, " ");
@@ -14,6 +17,7 @@ void handleGet(struct requestData rqData){
         pthread_exit(NULL);
         return;
     }
+
     //Assign a buffer with the size of the file + headers
     char sendbuf[strlen(data) + 100];
     sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
@@ -50,8 +54,8 @@ void handleHead(struct requestData rqData){
 }
 
 void return404(struct requestData rqData){
-    char* data = getFile("404.html");
-    char sendbuf[getFileSize("404.html") + 100];
+    char* data = getFile(g_404responsefile);
+    char sendbuf[getFileSize(g_404responsefile) + 100];
     if (!data){
         printf("WARNING: Please make a \"404.html\" file for users to receive upon getting a 404 error\n\n");
         sprintf(sendbuf, "HTTP/1.1 404 NOT FOUND\r\n"
@@ -61,7 +65,7 @@ void return404(struct requestData rqData){
         sprintf(sendbuf, "HTTP/1.1 404 NOT FOUND\r\n"
                      "Content-Type: text/html;\r\n"
                      "Content-Length: %I64d\r\n\r\n"
-                     "%s\r\n\r\n", getFileSize("404.html"), data);
+                     "%s\r\n\r\n", getFileSize(g_404responsefile), data);
     }
 
     send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
@@ -72,11 +76,10 @@ void return404(struct requestData rqData){
 char* getFile(char *path){
     //Get rid of the first part of the path if it's a "/"
     if(strncmp(path, "/", 1) == 0) for(int i = 1; i < strlen(path)+1; ++i) path[i-1] = path[i];
-    //If the path is empty set it to index.html
-    /*
-    TODO: MAKE THE DEFAULT PATH CONFIGURABLE
-    */
-    if(strcmp(path, "") == 0) path = "index.html";
+
+    //If the path is empty set it to the root path defined in config.txt
+    if(strcmp(path, "") == 0) path = g_root;
+
     if( access( path, F_OK ) == -1 ) return 0;
     FILE* fptr = fopen(path, "r");
 
@@ -101,11 +104,9 @@ char* getFile(char *path){
 size_t getFileSize(char *path){
     //Get rid of the first part of the path if it's a "/"
     if(strncmp(path, "/", 1) == 0) for(int i = 1; i < strlen(path)+1; ++i) path[i-1] = path[i];
-    //If the path is empty replace it with "index.html"
-    /*
-    TODO: MAKE THE DEFAULT PATH CONFIGURABLE
-    */
-    if(strcmp(path, "") == 0) path = "index.html";
+
+    //If the path is empty set it to the root path defined in config.txt
+    if(strcmp(path, "") == 0) path = g_root;
     if( access( path, F_OK ) == -1 ) return 0;
     //Get and return the file size
     FILE* fptr = fopen(path, "r");

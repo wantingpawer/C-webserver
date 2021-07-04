@@ -4,6 +4,8 @@
 
 SOCKET webserverStartUp();
 
+int loadConfigs();
+
 struct requestData{
     char recvbuf[DEFAULT_BUFLEN];
     SOCKET clientSocket;
