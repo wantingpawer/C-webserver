@@ -17,6 +17,5 @@ extern char g_root[DEFAULT_BUFLEN];
 #include <direct.h>
 #include <pthread.h>
 
-#include "handleGet.h"
-#include "handleHead.h"
+#include "handleResponse.h"
 #include "startUp.h"

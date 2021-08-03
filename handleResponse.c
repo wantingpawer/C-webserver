@@ -5,8 +5,12 @@ char g_root[DEFAULT_BUFLEN];
 
 void handleGet(struct requestData rqData){
     //Get the requested path from the request
-    strtok(rqData.recvbuf, " ");
-    char* filepath = strtok(NULL, " ");
+    char* tempRecvbuf = malloc(sizeof(rqData.recvbuf));
+    strcpy(tempRecvbuf, rqData.recvbuf);
+
+    //A temp variable is used here because strtok() modifies the original string passed into it
+    strtok(tempRecvbuf, " "); char* filepath = strtok(NULL, " ");
+    determineContentType(filepath);
 
     //Get the data and the file size
     char* data = getFile(filepath);
@@ -15,19 +19,26 @@ void handleGet(struct requestData rqData){
         return404(rqData);
         free(data);
         pthread_exit(NULL);
-        return;
     }
+
+    /*
+    TODO: USE FUNCTION determineContentType() AND OTHERS TO DYNAMICALLY GENERATE HTTP HEADERS
+    IN ORDER TO STOP HARD CODING THEM INTO THE PROGRAM
+    */
 
     //Assign a buffer with the size of the file + headers
     char sendbuf[strlen(data) + 100];
     sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
-                     "Content-Type: text/html;\r\n"
+                     //"Content-Type: text/html;\r\n"
                      "Content-Length: %I64d\r\n\r\n"
                      "%s\r\n\r\n", strlen(data), data);
 
     send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
     printf("Sent:\n%s\n", sendbuf);
+
+    //Freeing all the dynamically allocated memory created during the execution of the thread
     free(data);
+    free(tempRecvbuf);
     pthread_exit(NULL);
 }
 
@@ -38,13 +49,14 @@ void handleHead(struct requestData rqData){
     size_t size = getFileSize(filepath);
     if(size == 0){
         printf("Invalid path\n\n");
-        return;
+        return404(rqData);
+        pthread_exit(NULL);
     }
 
     //Create a buffer to hold the header
     char sendbuf[500];
     sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
-                     "Content-Type: text/html;\r\n"
+                     //"Content-Type: text/html;\r\n"
                      "Content-Length: %I64d\r\n\r\n",
                      size);
 
@@ -80,7 +92,8 @@ char* getFile(char *path){
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
 
-    if( access( path, F_OK ) == -1 ) return 0;
+    //Check if file is accessible, if not return nothing, if so open the file for reading
+    if( access( path, F_OK ) == -1 ) return NULL;
     FILE* fptr = fopen(path, "r");
 
     //Get file size
@@ -91,10 +104,18 @@ char* getFile(char *path){
     //Allocate enough memory to hold the file
     char* result = malloc(size);
     char temp[size];
+
+    //Copy the first line of the file to the result variable
     fgets(result, size, fptr);
 
     //Make sure ever line is read (can probably make this a little more efficient, works for now though)
-    while(strlen(result) < size - 1){
+
+    /*I don't know why you need to take 2 away from the size
+    *Would make sense if you only had to take 1
+    *I don't like this solution since I don't know how it works
+    *But if you only take 1, it copies the last line twice and doesn't assign enough memory
+    *So the program crashes when you try to free the memory*/
+    while(strlen(result) < size - 2){
         fgets(temp, size, fptr);
         strcat(result, temp);
     }
@@ -112,4 +133,16 @@ size_t getFileSize(char *path){
     FILE* fptr = fopen(path, "r");
     fseek(fptr, 0L, SEEK_END);
     return ftell(fptr);
+}
+
+char* determineContentType(char* filepath){
+    //Get the file extension
+    char* tempFilepath = malloc(sizeof(*filepath));
+    strcpy(tempFilepath, filepath);
+
+    //A temp variable is used here because strtok() modifies the original string passed into it
+    strtok(tempFilepath, "."); char* ext = strtok(NULL, ".");
+
+    free(tempFilepath);
+    return ext;
 }
