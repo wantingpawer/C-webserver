@@ -2,8 +2,7 @@
 #define _HANDLERESPONSE_H_
 #include "common.h"
 
-void handleGet(struct requestData rqData);
-void handleHead(struct requestData rqData);
+void handleResponse(struct requestData rqData);
 
 char* getFile(char* path);
 void return404(struct requestData rqData);
@@ -12,4 +11,3 @@ size_t getFileSize(char* path);
 char* determineContentType(char* filepath);
 
 #endif // _HANDLERESPONSE_H_
-

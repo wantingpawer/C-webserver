@@ -91,5 +91,6 @@ int loadConfigs(){
         else if(strcmp("404responsefile", setting) == 0) strcpy(g_404responsefile, value);
         else if(strcmp("root", setting) == 0) strcpy(g_root, value);
     }
+    fclose(fptr);
     return 0;
 }

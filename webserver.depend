@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1627910163 source:c:\users\omera\documents\github\c-webserver\handleresponse.c
+1628695954 source:c:\users\omera\documents\github\c-webserver\handleresponse.c
 	"common.h"
 
-1627990396 c:\users\omera\documents\github\c-webserver\common.h
+1630669583 c:\users\omera\documents\github\c-webserver\common.h
 	<stdio.h>
 	<stdlib.h>
 	<winsock2.h>
@@ -22,10 +22,10 @@
 1627505182 c:\users\omera\documents\github\c-webserver\startup.h
 	"common.h"
 
-1627505182 source:c:\users\omera\documents\github\c-webserver\startup.c
+1630668114 source:c:\users\omera\documents\github\c-webserver\startup.c
 	"common.h"
 
-1627903800 source:c:\users\omera\documents\github\c-webserver\main.c
+1630842340 source:c:\users\omera\documents\github\c-webserver\main.c
 	"common.h"
 
 1625410280 source:c:\users\omera\documents\c++ stuff\c-webserver-master\c-webserver-master\handleresponse.c
@@ -58,6 +58,6 @@
 1625411373 source:c:\users\omera\documents\c++ stuff\c-webserver-master\c-webserver-master\startup.c
 	"common.h"
 
-1627991303 c:\users\omera\documents\github\c-webserver\handleresponse.h
+1630842298 c:\users\omera\documents\github\c-webserver\handleresponse.h
 	"common.h"
 

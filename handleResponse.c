@@ -3,65 +3,63 @@
 char g_404responsefile[DEFAULT_BUFLEN];
 char g_root[DEFAULT_BUFLEN];
 
-void handleGet(struct requestData rqData){
+void handleResponse(struct requestData rqData){
     //Get the requested path from the request
     char* tempRecvbuf = malloc(sizeof(rqData.recvbuf));
     strcpy(tempRecvbuf, rqData.recvbuf);
 
     //A temp variable is used here because strtok() modifies the original string passed into it
     strtok(tempRecvbuf, " "); char* filepath = strtok(NULL, " ");
-    determineContentType(filepath);
-
-    //Get the data and the file size
-    char* data = getFile(filepath);
-    if (!data){
-        printf("Invalid path\n\n");
-        return404(rqData);
-        free(data);
-        pthread_exit(NULL);
-    }
+    //char* type = determineContentType(filepath);
 
     /*
-    TODO: USE FUNCTION determineContentType() AND OTHERS TO DYNAMICALLY GENERATE HTTP HEADERS
-    IN ORDER TO STOP HARD CODING THEM INTO THE PROGRAM
+    TODO: MOVE MORE STUFF OUT OF METHOD SPECIFIC BRANCHES
+    PERHAPS USE MALLOC/REALLOC FOR SENDBUF?
     */
 
-    //Assign a buffer with the size of the file + headers
-    char sendbuf[strlen(data) + 100];
-    sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
+    //Determine type of request and handle appropriately
+    if(strncmp(rqData.recvbuf, "GET", 3) == 0){
+        char* data = getFile(filepath);
+        if(!data){
+            printf("Invalid path\n\n");
+            return404(rqData);
+            free(data);
+            pthread_exit(NULL);
+        }
+        char sendBuf[strlen(data) + 100];
+            /*
+            TODO: USE FUNCTION determineContentType() AND OTHERS TO DYNAMICALLY GENERATE HTTP HEADERS
+            IN ORDER TO STOP HARD CODING THEM INTO THE PROGRAM
+            */
+        sprintf(sendBuf, "HTTP/1.1 200 OK\r\n"
                      //"Content-Type: text/html;\r\n"
                      "Content-Length: %I64d\r\n\r\n"
                      "%s\r\n\r\n", strlen(data), data);
+        send(rqData.clientSocket, sendBuf, DEFAULT_BUFLEN, 0);
+        printf("Sent:\n%s\n", sendBuf);
+        free(data);
+    }else if(strncmp(rqData.recvbuf, "HEAD", 4) == 0){
+        size_t size = getFileSize(filepath);
+        if(size == 0){
+            printf("Invalid path\n\n");
+            return404(rqData);
+            pthread_exit(NULL);
+        }
 
-    send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
-    printf("Sent:\n%s\n", sendbuf);
+        //Create a buffer to hold the header
+        char sendbuf[500];
+        sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
+                         //"Content-Type: text/html;\r\n"
+                         "Content-Length: %I64d\r\n\r\n",
+                         size);
 
-    //Freeing all the dynamically allocated memory created during the execution of the thread
-    free(data);
-    free(tempRecvbuf);
-    pthread_exit(NULL);
-}
-
-void handleHead(struct requestData rqData){
-    //Get the requested path from the request
-    strtok(rqData.recvbuf, " ");
-    char* filepath = strtok(NULL, " ");
-    size_t size = getFileSize(filepath);
-    if(size == 0){
-        printf("Invalid path\n\n");
-        return404(rqData);
-        pthread_exit(NULL);
+        send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
+        printf("Sent:\n%s\n", sendbuf);
     }
 
-    //Create a buffer to hold the header
-    char sendbuf[500];
-    sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
-                     //"Content-Type: text/html;\r\n"
-                     "Content-Length: %I64d\r\n\r\n",
-                     size);
-
-    send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
-    printf("Sent:\n%s\n", sendbuf);
+    //Free all dynamically allocated memory and terminate the thread
+    free(tempRecvbuf);
+    //free(type);
     pthread_exit(NULL);
 }
 
@@ -142,7 +140,11 @@ char* determineContentType(char* filepath){
 
     //A temp variable is used here because strtok() modifies the original string passed into it
     strtok(tempFilepath, "."); char* ext = strtok(NULL, ".");
+    char* res = malloc(strlen(ext) + 5);
+    strcpy(res, "text/");
+    strcat(res, ext);
 
+    printf("%s", res);
     free(tempFilepath);
-    return ext;
+    return res;
 }

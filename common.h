@@ -1,5 +1,3 @@
-#define DEFAULT_PORT "80"
-#define MAX_THREADS 4
 #define DEFAULT_BUFLEN 2048
 #define CONFIG_FILE "config.txt"
 

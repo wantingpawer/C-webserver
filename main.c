@@ -31,13 +31,7 @@ int main(int argc, char *argv[]){
 
             //Print what was received and handle specific requests
             printf("%s\n", rqData.recvbuf);
-            if(strncmp(rqData.recvbuf, "GET", 3) == 0){
-                int err = pthread_create(&threads[0], NULL, handleGet, &rqData);
-                if(err != 0) printf("Error in thread creation %i", err);
-            }else if(strncmp(rqData.recvbuf, "HEAD", 4) == 0){
-                int err = pthread_create(&threads[1], NULL, handleHead, &rqData);
-                if(err != 0) printf("Error in thread creation %i", err);
-            }
+            pthread_create(&threads[0], NULL, handleResponse, &rqData);
         }
     }
     return 0;

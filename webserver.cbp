@@ -34,14 +34,11 @@
 		<Linker>
 			<Add library="WS2_32" />
 		</Linker>
-		<Unit filename="handleGet.h" />
-		<Unit filename="handleHead.h" />
-		<Unit filename="handleRequest.h">
-			<Option target="Release" />
-		</Unit>
+		<Unit filename="common.h" />
 		<Unit filename="handleResponse.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="handleResponse.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -49,10 +46,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="startUp.h" />
-		<Extensions>
-			<code_completion />
-			<envvars />
-			<debugger />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

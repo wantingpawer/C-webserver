@@ -1,0 +1,4 @@
+HOW TO USE:
+
+Run webserver.exe
+Configure settings in config.txt
