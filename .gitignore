@@ -5,3 +5,4 @@ TEXT.html
 other.html
 *.o
 style.css
+bin/Debug/webserver.exe

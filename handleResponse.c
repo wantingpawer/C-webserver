@@ -10,8 +10,7 @@ void handleResponse(struct requestData rqData){
 
     //A temp variable is used here because strtok() modifies the original string passed into it
     strtok(tempRecvbuf, " "); char* filepath = strtok(NULL, " ");
-    //char* type = determineContentType(filepath);
-
+    char* type = determineContentType(filepath);
     /*
     TODO: MOVE MORE STUFF OUT OF METHOD SPECIFIC BRANCHES
     PERHAPS USE MALLOC/REALLOC FOR SENDBUF?
@@ -33,8 +32,9 @@ void handleResponse(struct requestData rqData){
             */
         sprintf(sendBuf, "HTTP/1.1 200 OK\r\n"
                      //"Content-Type: text/html;\r\n"
-                     "Content-Length: %I64d\r\n\r\n"
-                     "%s\r\n\r\n", strlen(data), data);
+                     "Content-Length: %I64d\r\n"
+                     "Content-Type: %s\r\n\r\n"
+                     "%s\r\n\r\n", strlen(data), type, data);
         send(rqData.clientSocket, sendBuf, DEFAULT_BUFLEN, 0);
         printf("Sent:\n%s\n", sendBuf);
         free(data);
@@ -134,8 +134,14 @@ size_t getFileSize(char *path){
 }
 
 char* determineContentType(char* filepath){
+    //Get rid of the first part of the path if it's a "/"
+    if(strncmp(filepath, "/", 1) == 0) for(int i = 1; i < strlen(filepath)+1; ++i) filepath[i-1] = filepath[i];
+
+    //If the path is empty set it to the root path defined in config.txt
+    if(strcmp(filepath, "") == 0) filepath = g_root;
+
     //Get the file extension
-    char* tempFilepath = malloc(sizeof(*filepath));
+    char* tempFilepath = malloc(sizeof(filepath) + 1);
     strcpy(tempFilepath, filepath);
 
     //A temp variable is used here because strtok() modifies the original string passed into it
@@ -144,7 +150,6 @@ char* determineContentType(char* filepath){
     strcpy(res, "text/");
     strcat(res, ext);
 
-    printf("%s", res);
     free(tempFilepath);
     return res;
 }
