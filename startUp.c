@@ -69,6 +69,10 @@ SOCKET webserverStartUp(){
     return listenSocket;
 }
 
+struct whitelistList *addWhitelist(){
+
+};
+
 int loadConfigs(){
     //Open up the config file for reading from
     FILE* fptr = fopen(CONFIG_FILE, "r");
@@ -90,7 +94,18 @@ int loadConfigs(){
         else if(strcmp("max_thread", setting) == 0) g_max_thread = atoi(value);
         else if(strcmp("404responsefile", setting) == 0) strcpy(g_404responsefile, value);
         else if(strcmp("root", setting) == 0) strcpy(g_root, value);
+        else if(strcmp("whitelist", setting) == 0) loadWhitelist(value);
     }
     fclose(fptr);
     return 0;
+}
+
+void loadWhitelist(char* file){
+    FILE* fptr = fopen(file, "r");
+    char temp[2048]; //2048 is the de facto max length for a URL
+    do{
+        fgets(temp, 2048, fptr);
+        printf("%s", temp);
+    }while(strcmp(temp, "END") != 0);
+    fclose(fptr);
 }

@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1630843144 source:c:\users\omera\documents\github\c-webserver\handleresponse.c
+1634033052 source:c:\users\omera\documents\github\c-webserver\handleresponse.c
 	"common.h"
 
 1630669583 c:\users\omera\documents\github\c-webserver\common.h
@@ -19,10 +19,10 @@
 1627723976 c:\users\omera\documents\github\c-webserver\handlehead.h
 	"common.h"
 
-1627505182 c:\users\omera\documents\github\c-webserver\startup.h
+1634033683 c:\users\omera\documents\github\c-webserver\startup.h
 	"common.h"
 
-1633444870 source:c:\users\omera\documents\github\c-webserver\startup.c
+1634033651 source:c:\users\omera\documents\github\c-webserver\startup.c
 	"common.h"
 
 1633442782 source:c:\users\omera\documents\github\c-webserver\main.c

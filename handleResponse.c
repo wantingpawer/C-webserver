@@ -27,11 +27,9 @@ void handleResponse(struct requestData rqData){
         }
         char sendBuf[strlen(data) + 100];
             /*
-            TODO: USE FUNCTION determineContentType() AND OTHERS TO DYNAMICALLY GENERATE HTTP HEADERS
-            IN ORDER TO STOP HARD CODING THEM INTO THE PROGRAM
+            TODO: DYNAMICALLY GENERATE HTTP HEADERS IN ORDER TO STOP HARD CODING THEM INTO THE PROGRAM
             */
         sprintf(sendBuf, "HTTP/1.1 200 OK\r\n"
-                     //"Content-Type: text/html;\r\n"
                      "Content-Length: %I64d\r\n"
                      "Content-Type: %s\r\n\r\n"
                      "%s\r\n\r\n", strlen(data), type, data);
@@ -49,9 +47,9 @@ void handleResponse(struct requestData rqData){
         //Create a buffer to hold the header
         char sendbuf[500];
         sprintf(sendbuf, "HTTP/1.1 200 OK\r\n"
-                         //"Content-Type: text/html;\r\n"
-                         "Content-Length: %I64d\r\n\r\n",
-                         size);
+                         "Content-Length: %I64d\r\n\r\n"
+                         "Content-Type: %s\r\n\r\n",
+                         size, type);
 
         send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
         printf("Sent:\n%s\n", sendbuf);
@@ -59,7 +57,7 @@ void handleResponse(struct requestData rqData){
 
     //Free all dynamically allocated memory and terminate the thread
     free(tempRecvbuf);
-    //free(type);
+    free(type);
     pthread_exit(NULL);
 }
 
