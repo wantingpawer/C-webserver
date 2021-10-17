@@ -4,8 +4,19 @@ int g_max_thread;
 char g_port[DEFAULT_BUFLEN];
 char g_404responsefile[DEFAULT_BUFLEN];
 char g_root[DEFAULT_BUFLEN];
+struct whitelistList *g_whitelist;
+struct whitelistList *g_whitelistEnd;
+bool g_usingwhitelist;
 
 SOCKET webserverStartUp(){
+
+    //Initialise whitelists
+    g_usingwhitelist = true;
+    g_whitelist = malloc(sizeof(struct whitelistList));
+    g_whitelistEnd = malloc(sizeof(struct whitelistList));
+    g_whitelist->id = 0;
+    strcpy(g_whitelist->url, "/");
+
     WSADATA wsa;
     SOCKET listenSocket;
 
@@ -69,8 +80,14 @@ SOCKET webserverStartUp(){
     return listenSocket;
 }
 
-struct whitelistList *addWhitelist(){
-
+struct whitelistList *addWhitelist(struct whitelistList *lastItem, char* path){
+    struct whitelistList *newItem = malloc(sizeof(struct whitelistList)); //Create a new dynamically allocated whitelistlist item, of size whitelistlist
+    newItem->id = lastItem->id + 1;
+    lastItem->next = newItem;
+    path[strcspn(path, "\n")] = 0; //strcspn is a little known C function that reads up to the character given or a null byte, so I'm using it to remove trailing newlines
+    strcpy(newItem->url, path);
+    newItem->next = NULL;
+    return newItem;
 };
 
 int loadConfigs(){
@@ -94,6 +111,7 @@ int loadConfigs(){
         else if(strcmp("max_thread", setting) == 0) g_max_thread = atoi(value);
         else if(strcmp("404responsefile", setting) == 0) strcpy(g_404responsefile, value);
         else if(strcmp("root", setting) == 0) strcpy(g_root, value);
+        else if(strcmp("usingwhitelist", setting) == 0){ if(strcmp(value, "false") == 0) g_usingwhitelist = false; }
         else if(strcmp("whitelist", setting) == 0) loadWhitelist(value);
     }
     fclose(fptr);
@@ -102,10 +120,12 @@ int loadConfigs(){
 
 void loadWhitelist(char* file){
     FILE* fptr = fopen(file, "r");
-    char temp[2048]; //2048 is the de facto max length for a URL
-    do{
+    char* temp = malloc(2048); //2048 is the de facto max length for a URL
+    struct whitelistList *lastItem = g_whitelist;
+    while(strcmp(temp, "END") != 0){
         fgets(temp, 2048, fptr);
-        printf("%s", temp);
-    }while(strcmp(temp, "END") != 0);
+        if(strcmp(temp, "END") != 0) lastItem = addWhitelist(lastItem, temp);
+    }
     fclose(fptr);
+    g_whitelistEnd = lastItem;
 }

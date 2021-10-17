@@ -1,4 +1,3 @@
-/
 index.html
 other.html
 END

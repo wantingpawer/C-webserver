@@ -2,4 +2,5 @@ port=80
 max_thread=4
 404responsefile=404.html
 root=index.html
+usingwhitelist=true
 whitelist=whitelist.txt
