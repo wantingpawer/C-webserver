@@ -4,6 +4,8 @@
 
 void handleResponse(struct requestData rqData);
 
+bool checkFileWhitelistPrescence(char* path);
+
 char* getFile(char* path);
 void return404(struct requestData rqData);
 size_t getFileSize(char* path);

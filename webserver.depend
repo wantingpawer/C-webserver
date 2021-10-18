@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1634461661 source:c:\users\omera\documents\github\c-webserver\handleresponse.c
+1634559094 source:c:\users\omera\documents\github\c-webserver\handleresponse.c
 	"common.h"
 
-1634464982 c:\users\omera\documents\github\c-webserver\common.h
+1634558114 c:\users\omera\documents\github\c-webserver\common.h
 	<stdio.h>
 	<stdbool.h>
 	<stdlib.h>
@@ -20,13 +20,13 @@
 1627723976 c:\users\omera\documents\github\c-webserver\handlehead.h
 	"common.h"
 
-1634461661 c:\users\omera\documents\github\c-webserver\startup.h
+1634559341 c:\users\omera\documents\github\c-webserver\startup.h
 	"common.h"
 
-1634033651 source:c:\users\omera\documents\github\c-webserver\startup.c
+1634559362 source:c:\users\omera\documents\github\c-webserver\startup.c
 	"common.h"
 
-1634461886 source:c:\users\omera\documents\github\c-webserver\main.c
+1633442782 source:c:\users\omera\documents\github\c-webserver\main.c
 	"common.h"
 
 1625410280 source:c:\users\omera\documents\c++ stuff\c-webserver-master\c-webserver-master\handleresponse.c
@@ -59,6 +59,6 @@
 1625411373 source:c:\users\omera\documents\c++ stuff\c-webserver-master\c-webserver-master\startup.c
 	"common.h"
 
-1631032001 c:\users\omera\documents\github\c-webserver\handleresponse.h
+1634559797 c:\users\omera\documents\github\c-webserver\handleresponse.h
 	"common.h"
 

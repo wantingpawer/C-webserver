@@ -4,3 +4,5 @@ max_thread=4
 root=index.html
 usingwhitelist=true
 whitelist=whitelist.txt
+usingposttable=true
+posttable=posttable.txt

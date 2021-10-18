@@ -13,9 +13,14 @@ struct requestData{
 };
 
 struct whitelistList{
-    int id;
     char url[2048];
     struct whitelistList *next;
+};
+
+struct posttable{
+    char url[2048];
+    char forwardTo[2048];
+    struct posttable *next;
 };
 
 #endif // _STARTUP_H_

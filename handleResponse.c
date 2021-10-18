@@ -2,6 +2,7 @@
 
 char g_404responsefile[DEFAULT_BUFLEN];
 char g_root[DEFAULT_BUFLEN];
+bool g_usingwhitelist;
 
 void handleResponse(struct requestData rqData){
     //Get the requested path from the request
@@ -53,6 +54,8 @@ void handleResponse(struct requestData rqData){
 
         send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
         printf("Sent:\n%s\n", sendbuf);
+    }else if(strncmp(rqData.recvbuf, "POST", 4) == 0){
+
     }
 
     //Free all dynamically allocated memory and terminate the thread
@@ -81,12 +84,25 @@ void return404(struct requestData rqData){
     free(data);
 }
 
+bool checkFileWhitelistPrescence(char* path){
+    struct whitelistList *next = g_whitelist;
+    while(next != NULL){ //Iterate over the whole whitelist
+        struct whitelistList *current = next;
+        if(strcmp(current->url, path) == 0) return true; //If the current path is one of the whitelist values, return true
+        else if(current->next == NULL) break; //If this is the final item (i.e. there's no next value), break out of the loop
+        next = current->next;
+    }
+    return false;
+}
+
 char* getFile(char *path){
     //Get rid of the first part of the path if it's a "/"
     if(strncmp(path, "/", 1) == 0) for(int i = 1; i < strlen(path)+1; ++i) path[i-1] = path[i];
 
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
+    //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return NULL to indicate file not found
+    else if(!((g_usingwhitelist && path != g_404responsefile) && checkFileWhitelistPrescence(path))) return NULL;
 
     //Check if file is accessible, if not return nothing, if so open the file for reading
     if( access( path, F_OK ) == -1 ) return NULL;
@@ -124,6 +140,9 @@ size_t getFileSize(char *path){
 
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
+    //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return NULL to indicate file not found
+    else if(!((g_usingwhitelist && path != g_404responsefile) && checkFileWhitelistPrescence(path))) return NULL;
+
     if( access( path, F_OK ) == -1 ) return 0;
     //Get and return the file size
     FILE* fptr = fopen(path, "r");
