@@ -7,8 +7,12 @@ char g_root[DEFAULT_BUFLEN];
 struct whitelistList *g_whitelist;
 bool g_usingwhitelist;
 bool g_usingposttable;
+pthread_mutex_t mutex;
+int currentThreads;
 
 SOCKET webserverStartUp(){
+    currentThreads = 0;
+    pthread_mutex_init(&mutex, NULL);
 
     //Initialise whitelists
     g_usingwhitelist = true;

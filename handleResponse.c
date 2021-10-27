@@ -3,6 +3,8 @@
 char g_404responsefile[DEFAULT_BUFLEN];
 char g_root[DEFAULT_BUFLEN];
 bool g_usingwhitelist;
+int currentThreads;
+pthread_mutex_t mutex;
 
 void handleResponse(struct requestData rqData){
     //Get the requested path from the request
@@ -61,6 +63,9 @@ void handleResponse(struct requestData rqData){
     //Free all dynamically allocated memory and terminate the thread
     free(tempRecvbuf);
     free(type);
+    pthread_mutex_lock(&mutex);
+    currentThreads--;
+    pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
 
@@ -102,7 +107,7 @@ char* getFile(char *path){
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
     //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return NULL to indicate file not found
-    else if(!((g_usingwhitelist && path != g_404responsefile) && checkFileWhitelistPrescence(path))) return NULL;
+    else if(!(strcmp(path, g_404responsefile) == 0 || (g_usingwhitelist && checkFileWhitelistPrescence(path)))) return NULL;
 
     //Check if file is accessible, if not return nothing, if so open the file for reading
     if( access( path, F_OK ) == -1 ) return NULL;
@@ -140,8 +145,8 @@ size_t getFileSize(char *path){
 
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
-    //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return NULL to indicate file not found
-    else if(!((g_usingwhitelist && path != g_404responsefile) && checkFileWhitelistPrescence(path))) return NULL;
+    //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return 0 to indicate file not found
+    else if(!(strcmp(path, g_404responsefile) == 0 || (g_usingwhitelist && checkFileWhitelistPrescence(path)))) return 0;
 
     if( access( path, F_OK ) == -1 ) return 0;
     //Get and return the file size
@@ -163,6 +168,7 @@ char* determineContentType(char* filepath){
 
     //A temp variable is used here because strtok() modifies the original string passed into it
     strtok(tempFilepath, "."); char* ext = strtok(NULL, ".");
+    if(ext == NULL) return "";
     char* res = malloc(strlen(ext) + 5);
     strcpy(res, "text/");
     strcat(res, ext);

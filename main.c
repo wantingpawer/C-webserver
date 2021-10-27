@@ -2,12 +2,11 @@
 //If the code results a linker error, make sure ws2_32.lib has been included as a library to be linked
 
 int g_max_thread;
+int currentThreads;
+pthread_mutex_t mutex;
 
 int main(int argc, char *argv[]){
-
     SOCKET listenSocket = webserverStartUp();
-    pthread_t threads[g_max_thread];
-
     struct requestData rqData;
 
     while(1){
@@ -31,7 +30,20 @@ int main(int argc, char *argv[]){
 
             //Print what was received and handle specific requests
             printf("%s\n", rqData.recvbuf);
-            pthread_create(&threads[0], NULL, handleResponse, &rqData);
+            if(currentThreads < g_max_thread){
+                pthread_create(NULL, NULL, handleResponse, &rqData);
+                pthread_mutex_lock(&mutex);
+                currentThreads++;
+                pthread_mutex_unlock(&mutex);
+            }else{
+                printf("Max threads reached");
+                while(currentThreads >= g_max_thread){
+                    pthread_create(NULL, NULL, handleResponse, &rqData);
+                }
+                pthread_mutex_lock(&mutex);
+                currentThreads++;
+                pthread_mutex_unlock(&mutex);
+            }
         }
     }
     return 0;
