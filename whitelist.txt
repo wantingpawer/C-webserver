@@ -1,3 +1,5 @@
 index.html
+other.html
+style.css
 other-path.html
 END

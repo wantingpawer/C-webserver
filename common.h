@@ -1,4 +1,5 @@
 #define DEFAULT_BUFLEN 2048
+#define MAX_HEAD 128
 #define CONFIG_FILE "config.txt"
 
 #include <stdio.h>

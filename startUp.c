@@ -2,6 +2,7 @@
 
 int g_max_thread;
 char g_port[DEFAULT_BUFLEN];
+char g_backendport[DEFAULT_BUFLEN];
 char g_404responsefile[DEFAULT_BUFLEN];
 char g_root[DEFAULT_BUFLEN];
 struct whitelistList *g_whitelist;
@@ -9,6 +10,7 @@ bool g_usingwhitelist;
 bool g_usingposttable;
 pthread_mutex_t mutex;
 int currentThreads;
+
 
 SOCKET webserverStartUp(){
     currentThreads = 0;
@@ -28,6 +30,8 @@ SOCKET webserverStartUp(){
         exit(-1);
     }
     printf("Initialised\n");
+
+    g_backendsock = backendSocket();
 
     //Load configuration options from the config file (defined in the preprocessor variable CONFIG_FILE)
     if(loadConfigs() == 0) printf("Configs loaded from %s\n", CONFIG_FILE);
@@ -77,7 +81,57 @@ SOCKET webserverStartUp(){
         exit(-1);
     }
 
+
+
     printf("Listening on socket\n");
+
+    return listenSocket;
+}
+
+SOCKET backendSocket(){
+    SOCKET listenSocket;
+    //Creates the address info structures to be used in getaddrinfo();
+    struct addrinfo *result = NULL, hints;
+
+    //Zeros out the memory in hints and defines it's values
+    ZeroMemory(&hints, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_flags = AI_PASSIVE;
+
+    if(getaddrinfo(NULL, g_backendport, &hints, &result) != 0){
+        printf("getaddrinfo failed: %d\n", WSAGetLastError());
+        WSACleanup();
+        exit(-1);
+    }
+
+    //Creates the socket to listen with and checks for any errors
+    if((listenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) == INVALID_SOCKET){
+        printf("Couldn't create socket: %d\n", WSAGetLastError());
+        exit(-1);
+    }
+    printf("Backend socket created\n");
+
+    if((bind(listenSocket, result->ai_addr, (int)result->ai_addrlen)) == SOCKET_ERROR){
+        printf("bind failed with error: %d\n", WSAGetLastError());
+        freeaddrinfo(result);
+        closesocket(listenSocket);
+        WSACleanup();
+        exit(-1);
+    }
+
+    freeaddrinfo(result);
+    printf("Socket bound\n");
+
+    if(listen(listenSocket, SOMAXCONN) == SOCKET_ERROR){
+        printf("Listen failed with error: %d\n", WSAGetLastError());
+        closesocket(listenSocket);
+        WSACleanup();
+        exit(-1);
+    }
+
+    printf("Listening on backend\n");
 
     return listenSocket;
 }
@@ -114,7 +168,7 @@ int loadConfigs(){
         else if(strcmp("root", setting) == 0) strcpy(g_root, value);
         else if(strcmp("usingwhitelist", setting) == 0){ if(strcmp(value, "false") == 0) g_usingwhitelist = false; }
         else if(strcmp("whitelist", setting) == 0) loadWhitelist(value);
-        else if(strcmp("usingposttable", setting) == 0){ if(strcmp(value, "true") == 0) g_usingposttable = true; }
+        else if(strcmp("backend_port", setting) == 0) strcpy (g_backendport, value);
     }
     fclose(fptr);
     return 0;

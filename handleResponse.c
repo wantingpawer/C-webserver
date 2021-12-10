@@ -7,12 +7,72 @@ int currentThreads;
 pthread_mutex_t mutex;
 
 void handleResponse(struct requestData rqData){
+
     //Get the requested path from the request
     char* tempRecvbuf = malloc(sizeof(rqData.recvbuf));
+    char* filepath;
     strcpy(tempRecvbuf, rqData.recvbuf);
 
-    //A temp variable is used here because strtok() modifies the original string passed into it
-    strtok(tempRecvbuf, " "); char* filepath = strtok(NULL, " ");
+    //POST requests are handled separately due to the nature of them
+    if(strncmp(rqData.recvbuf, "POST", 4) == 0){
+        //currentLine is referring to the current line being looked at by the loop a few lines down. Request line is the request line of the request
+        char* currentLine = strtok(tempRecvbuf, "\r\n");
+        char* requestline = currentLine;
+
+        //Number of headers is unknown and a for loop is used to assign headers from the request to the array
+        char* headers[MAX_HEAD];
+        for(int i = 0; currentLine != NULL; i++){
+            currentLine = strtok(NULL, "\r\n");
+            headers[i] = currentLine;
+        }
+
+        char* body = NULL;
+        int headersSize;
+
+        for(int i = 0; i < MAX_HEAD; i++){
+            if(headers[i] == NULL){
+                body = headers[i-1];
+                headers[i-1] = NULL;
+                headersSize = i-1;
+                break;
+            }
+        }
+        char jsonreq[MAX_HEAD*255];
+        sprintf(jsonreq, "{\n\"requestline\":\"%s\"\n\"headers\":\n\t[\n", requestline);
+        for(int i = 0; i < headersSize; i++){
+            char tempHead[255];
+            sprintf(tempHead, "\t\"%s\",\n", headers[i]);
+            strcat(jsonreq, tempHead);
+        }
+        char endofjson[strlen(body) + 50];
+        sprintf(endofjson, "\t]\n\"body\":\"%s\"\n}", body);
+        strcat(jsonreq, endofjson);
+        printf(jsonreq);
+        char sendbuf[100];
+
+        SOCKET backendsock;
+
+        if((backendsock = accept(, NULL, NULL)) == INVALID_SOCKET){
+            //Print an error
+            printf("Accept failed: %d\n", WSAGetLastError());
+            closesocket(listenSocket);
+            WSACleanup();
+            return -1;
+        }else{
+            send(backendsock, jsonreq, DEFAULT_BUFLEN, 0);
+            closesocket(backendsock);
+        }
+
+        sprintf(sendbuf, "HTTP/1.1 204 No Content\r\n");
+
+        send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
+        printf("Sent:\n%s\n", sendbuf);
+        pthread_exit(0);
+    }else{
+        //A temp variable is used here because strtok() modifies the original string passed into it
+        strtok(tempRecvbuf, " "); filepath = strtok(NULL, " ");
+    }
+
     char* type = determineContentType(filepath);
     /*
     TODO: MOVE MORE STUFF OUT OF METHOD SPECIFIC BRANCHES
@@ -56,10 +116,7 @@ void handleResponse(struct requestData rqData){
 
         send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
         printf("Sent:\n%s\n", sendbuf);
-    }else if(strncmp(rqData.recvbuf, "POST", 4) == 0){
-
     }
-
     //Free all dynamically allocated memory and terminate the thread
     free(tempRecvbuf);
     free(type);
@@ -73,7 +130,7 @@ void return404(struct requestData rqData){
     char* data = getFile(g_404responsefile);
     char sendbuf[getFileSize(g_404responsefile) + 100];
     if (!data){
-        printf("WARNING: Please make a \"404.html\" file for users to receive upon getting a 404 error\n\n");
+        printf("WARNING: Please make a \"%s\" file for users to receive upon getting a 404 error\n\n", g_404responsefile);
         sprintf(sendbuf, "HTTP/1.1 404 NOT FOUND\r\n"
                 "Content-Length: 0\r\n\r\n"
                 "\r\n\r\n");
