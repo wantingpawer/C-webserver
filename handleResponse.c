@@ -130,7 +130,11 @@ void return404(struct requestData rqData){
     char* data = getFile(g_404responsefile);
     char sendbuf[getFileSize(g_404responsefile) + 100];
     if (!data){
+<<<<<<< Updated upstream
         printf("WARNING: Please make a \"%s\" file for users to receive upon getting a 404 error\n\n", g_404responsefile);
+=======
+        printf("WARNING: Please define 404responsefile in \"config.txt\" for users to receive upon getting a 404 error\n\n");
+>>>>>>> Stashed changes
         sprintf(sendbuf, "HTTP/1.1 404 NOT FOUND\r\n"
                 "Content-Length: 0\r\n\r\n"
                 "\r\n\r\n");
@@ -164,7 +168,11 @@ char* getFile(char *path){
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
     //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return NULL to indicate file not found
+<<<<<<< Updated upstream
     else if(!(strcmp(path, g_404responsefile) == 0 || (g_usingwhitelist && checkFileWhitelistPrescence(path)))) return NULL;
+=======
+    else if(!((g_usingwhitelist && (strcmp(path, g_404responsefile) != 0)) && checkFileWhitelistPrescence(path))) return NULL;
+>>>>>>> Stashed changes
 
     //Check if file is accessible, if not return nothing, if so open the file for reading
     if( access( path, F_OK ) == -1 ) return NULL;
@@ -202,8 +210,13 @@ size_t getFileSize(char *path){
 
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
+<<<<<<< Updated upstream
     //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return 0 to indicate file not found
     else if(!(strcmp(path, g_404responsefile) == 0 || (g_usingwhitelist && checkFileWhitelistPrescence(path)))) return 0;
+=======
+    //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return NULL to indicate file not found
+    else if(!((g_usingwhitelist && (strcmp(path, g_404responsefile) == 0)) && checkFileWhitelistPrescence(path))) return 0;
+>>>>>>> Stashed changes
 
     if( access( path, F_OK ) == -1 ) return 0;
     //Get and return the file size

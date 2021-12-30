@@ -1,5 +1,8 @@
 index.html
 other.html
 style.css
+<<<<<<< Updated upstream
 other-path.html
+=======
+>>>>>>> Stashed changes
 END
