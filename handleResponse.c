@@ -4,7 +4,10 @@ char g_404responsefile[DEFAULT_BUFLEN];
 char g_root[DEFAULT_BUFLEN];
 bool g_usingwhitelist;
 int currentThreads;
+bool g_usingsiteprefix;
+char g_siteprefix[DEFAULT_BUFLEN];
 pthread_mutex_t mutex;
+SOCKET g_backendsock;
 
 void handleResponse(struct requestData rqData){
 
@@ -52,16 +55,16 @@ void handleResponse(struct requestData rqData){
 
         SOCKET backendsock;
 
-        if((backendsock = accept(, NULL, NULL)) == INVALID_SOCKET){
+        /*if((backendsock = accept(g_backendsock, NULL, NULL)) == INVALID_SOCKET){
             //Print an error
             printf("Accept failed: %d\n", WSAGetLastError());
-            closesocket(listenSocket);
+            closesocket(backendsock);
             WSACleanup();
-            return -1;
+            pthread_exit(0);
         }else{
             send(backendsock, jsonreq, DEFAULT_BUFLEN, 0);
             closesocket(backendsock);
-        }
+        }*/
 
         sprintf(sendbuf, "HTTP/1.1 204 No Content\r\n");
 
@@ -88,7 +91,7 @@ void handleResponse(struct requestData rqData){
             free(data);
             pthread_exit(NULL);
         }
-        char sendBuf[strlen(data) + 100];
+        char sendBuf[strlen(data) + 1000];
             /*
             TODO: DYNAMICALLY GENERATE HTTP HEADERS IN ORDER TO STOP HARD CODING THEM INTO THE PROGRAM
             */
@@ -130,11 +133,7 @@ void return404(struct requestData rqData){
     char* data = getFile(g_404responsefile);
     char sendbuf[getFileSize(g_404responsefile) + 100];
     if (!data){
-<<<<<<< Updated upstream
         printf("WARNING: Please make a \"%s\" file for users to receive upon getting a 404 error\n\n", g_404responsefile);
-=======
-        printf("WARNING: Please define 404responsefile in \"config.txt\" for users to receive upon getting a 404 error\n\n");
->>>>>>> Stashed changes
         sprintf(sendbuf, "HTTP/1.1 404 NOT FOUND\r\n"
                 "Content-Length: 0\r\n\r\n"
                 "\r\n\r\n");
@@ -168,11 +167,21 @@ char* getFile(char *path){
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
     //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return NULL to indicate file not found
-<<<<<<< Updated upstream
-    else if(!(strcmp(path, g_404responsefile) == 0 || (g_usingwhitelist && checkFileWhitelistPrescence(path)))) return NULL;
-=======
-    else if(!((g_usingwhitelist && (strcmp(path, g_404responsefile) != 0)) && checkFileWhitelistPrescence(path))) return NULL;
->>>>>>> Stashed changes
+    else if(/*!(strcmp(path, g_404responsefile) == 0 || */(g_usingwhitelist && checkFileWhitelistPrescence(path))) return NULL;
+
+    //This is absolutely horrific, I hate it, but couldn't think of anything better in it's place
+    char* tempPath = malloc(DEFAULT_BUFLEN);
+    strcpy(tempPath, g_siteprefix);
+
+    if(g_usingsiteprefix == true) strcat(tempPath, path);
+
+    printf("TEMPPATH: %s\n", tempPath);
+    printf("SITEPREFIX: %s\n", g_siteprefix);
+
+    strcpy(path, tempPath);
+    free(tempPath);
+
+    printf("PATH: %s\n", path);
 
     //Check if file is accessible, if not return nothing, if so open the file for reading
     if( access( path, F_OK ) == -1 ) return NULL;
@@ -210,13 +219,9 @@ size_t getFileSize(char *path){
 
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
-<<<<<<< Updated upstream
+
     //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return 0 to indicate file not found
     else if(!(strcmp(path, g_404responsefile) == 0 || (g_usingwhitelist && checkFileWhitelistPrescence(path)))) return 0;
-=======
-    //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return NULL to indicate file not found
-    else if(!((g_usingwhitelist && (strcmp(path, g_404responsefile) == 0)) && checkFileWhitelistPrescence(path))) return 0;
->>>>>>> Stashed changes
 
     if( access( path, F_OK ) == -1 ) return 0;
     //Get and return the file size

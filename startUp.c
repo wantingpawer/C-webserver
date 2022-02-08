@@ -10,6 +10,8 @@ bool g_usingwhitelist;
 bool g_usingposttable;
 pthread_mutex_t mutex;
 int currentThreads;
+bool g_usingsiteprefix;
+char g_siteprefix[DEFAULT_BUFLEN];
 
 
 SOCKET webserverStartUp(){
@@ -158,14 +160,17 @@ int loadConfigs(){
     //Until the end of the file is reached, load all the config options into their corresponding global variables
     while(ftell(fptr) < size - 1){
         fgets(temp, size, fptr);
+        if(strncmp(temp, "//", 2) == 0) continue; //Ignore comments
         char* setting = strtok(temp, "=");
         char* value = strtok(strtok(NULL, "="), "\n"); //The 2nd strtok gets rid of the "\n", this was the easiest solution I could think of
 
         //TODO: find a better solution for this
         if(strcmp("port", setting) == 0) strcpy(g_port, value);
         else if(strcmp("max_thread", setting) == 0) g_max_thread = atoi(value);
+        else if(strcmp("siteprefix", setting) == 0) strcpy(g_siteprefix, value);
         else if(strcmp("404responsefile", setting) == 0) strcpy(g_404responsefile, value);
         else if(strcmp("root", setting) == 0) strcpy(g_root, value);
+        else if(strcmp("usingsiteprefix", setting) == 0){ if(strcmp(value, "true") == 0) g_usingsiteprefix = true; }
         else if(strcmp("usingwhitelist", setting) == 0){ if(strcmp(value, "false") == 0) g_usingwhitelist = false; }
         else if(strcmp("whitelist", setting) == 0) loadWhitelist(value);
         else if(strcmp("backend_port", setting) == 0) strcpy (g_backendport, value);
