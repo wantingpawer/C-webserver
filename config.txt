@@ -2,10 +2,10 @@ port=80
 max_thread=4
 404responsefile=404.html
 root=index.html
-usingsiteprefix=true
+usingsiteprefix=false
 //Leave something after siteprefix whether it's being used or not as to not break the parser
 siteprefix=site/
-usingwhitelist=false
+usingwhitelist=true
 //Leave something after whitelist whether it's being used or not as to not break the parser
 whitelist=whitelist.txt
 backend_port=7333

@@ -19,6 +19,4 @@ extern SOCKET g_backendsock;
 extern bool g_usingwhitelist;
 extern struct whitelistList *g_whitelist;
 
-
-
 #endif // _GLOBAL_H_

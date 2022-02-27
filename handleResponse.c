@@ -70,7 +70,11 @@ void handleResponse(struct requestData rqData){
 
         send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
         printf("Sent:\n%s\n", sendbuf);
-        pthread_exit(0);
+        free(tempRecvbuf);
+        pthread_mutex_lock(&mutex);
+        currentThreads--;
+        pthread_mutex_unlock(&mutex);
+        pthread_exit(NULL);
     }else{
         //A temp variable is used here because strtok() modifies the original string passed into it
         strtok(tempRecvbuf, " "); filepath = strtok(NULL, " ");
@@ -89,6 +93,11 @@ void handleResponse(struct requestData rqData){
             printf("Invalid path\n\n");
             return404(rqData);
             free(data);
+            free(tempRecvbuf);
+            free(type);
+            pthread_mutex_lock(&mutex);
+            currentThreads--;
+            pthread_mutex_unlock(&mutex);
             pthread_exit(NULL);
         }
         char sendBuf[strlen(data) + 1000];
@@ -107,6 +116,11 @@ void handleResponse(struct requestData rqData){
         if(size == 0){
             printf("Invalid path\n\n");
             return404(rqData);
+            free(tempRecvbuf);
+            free(type);
+            pthread_mutex_lock(&mutex);
+            currentThreads--;
+            pthread_mutex_unlock(&mutex);
             pthread_exit(NULL);
         }
 
@@ -130,8 +144,10 @@ void handleResponse(struct requestData rqData){
 }
 
 void return404(struct requestData rqData){
-    char* data = getFile(g_404responsefile);
-    char sendbuf[getFileSize(g_404responsefile) + 100];
+    char tempFile[DEFAULT_BUFLEN];
+    strcpy(tempFile, g_404responsefile);
+    char* data = getFile(tempFile);
+    char sendbuf[strlen(data) + 150];
     if (!data){
         printf("WARNING: Please make a \"%s\" file for users to receive upon getting a 404 error\n\n", g_404responsefile);
         sprintf(sendbuf, "HTTP/1.1 404 NOT FOUND\r\n"
@@ -141,7 +157,7 @@ void return404(struct requestData rqData){
         sprintf(sendbuf, "HTTP/1.1 404 NOT FOUND\r\n"
                      "Content-Type: text/html;\r\n"
                      "Content-Length: %I64d\r\n\r\n"
-                     "%s\r\n\r\n", getFileSize(g_404responsefile), data);
+                     "%s\r\n\r\n", strlen(data), data);
     }
 
     send(rqData.clientSocket, sendbuf, DEFAULT_BUFLEN, 0);
@@ -167,7 +183,7 @@ char* getFile(char *path){
     //If the path is empty set it to the root path defined in config.txt
     if(strcmp(path, "") == 0) path = g_root;
     //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return NULL to indicate file not found
-    else if(/*!(strcmp(path, g_404responsefile) == 0 || */(g_usingwhitelist && checkFileWhitelistPrescence(path))) return NULL;
+    else if(!(strcmp(path, g_404responsefile) == 0 || !g_usingwhitelist || (g_usingwhitelist && checkFileWhitelistPrescence(path)))) return NULL;
 
     //This is absolutely horrific, I hate it, but couldn't think of anything better in it's place
     char* tempPath = malloc(DEFAULT_BUFLEN);
@@ -175,13 +191,8 @@ char* getFile(char *path){
 
     if(g_usingsiteprefix == true) strcat(tempPath, path);
 
-    printf("TEMPPATH: %s\n", tempPath);
-    printf("SITEPREFIX: %s\n", g_siteprefix);
-
     strcpy(path, tempPath);
     free(tempPath);
-
-    printf("PATH: %s\n", path);
 
     //Check if file is accessible, if not return nothing, if so open the file for reading
     if( access( path, F_OK ) == -1 ) return NULL;
@@ -221,7 +232,15 @@ size_t getFileSize(char *path){
     if(strcmp(path, "") == 0) path = g_root;
 
     //Check whether whitelist is enabled and file is contained - make exception for 404 file. If not, return 0 to indicate file not found
-    else if(!(strcmp(path, g_404responsefile) == 0 || (g_usingwhitelist && checkFileWhitelistPrescence(path)))) return 0;
+    else if(strcmp(path, g_404responsefile) == 0 || !g_usingwhitelist || (g_usingwhitelist && checkFileWhitelistPrescence(path))) return 0;
+
+    char* tempPath = malloc(DEFAULT_BUFLEN);
+    strcpy(tempPath, g_siteprefix);
+
+    if(g_usingsiteprefix == true) strcat(tempPath, path);
+
+    strcpy(path, tempPath);
+    free(tempPath);
 
     if( access( path, F_OK ) == -1 ) return 0;
     //Get and return the file size

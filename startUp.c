@@ -187,5 +187,6 @@ void loadWhitelist(char* file){
         fgets(temp, 2048, fptr);
         if(strcmp(temp, "END") != 0) lastItem = addWhitelist(lastItem, temp);
     }
+    free(temp);
     fclose(fptr);
 }
