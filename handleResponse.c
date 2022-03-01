@@ -170,16 +170,17 @@ char* getFile(char *path){
     else if(/*!(strcmp(path, g_404responsefile) == 0 || */(g_usingwhitelist && checkFileWhitelistPrescence(path))) return NULL;
 
     //This is absolutely horrific, I hate it, but couldn't think of anything better in it's place
-    char* tempPath = malloc(DEFAULT_BUFLEN);
-    strcpy(tempPath, g_siteprefix);
+    if(g_usingsiteprefix == true){
+        char* tempPath = malloc(DEFAULT_BUFLEN);
+        strcpy(tempPath, g_siteprefix);
 
-    if(g_usingsiteprefix == true) strcat(tempPath, path);
+        strcat(tempPath, path);
+        printf("TEMPPATH: %s\n", tempPath);
+        printf("SITEPREFIX: %s\n", g_siteprefix);
 
-    printf("TEMPPATH: %s\n", tempPath);
-    printf("SITEPREFIX: %s\n", g_siteprefix);
-
-    strcpy(path, tempPath);
-    free(tempPath);
+        strcpy(path, tempPath);
+        free(tempPath);
+    }
 
     printf("PATH: %s\n", path);
 
